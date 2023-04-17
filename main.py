@@ -121,7 +121,7 @@ def set_default(q: Union[str, None] = Query(default="fixedquery", min_length=3, 
 @app.get("/required/parameter/")
 def set_requierd_paramter(q: str = Query(default = ..., min_length = 3)):
     """
-    使用省略号(...)声明必需参数¶
+    使用省略号(...)声明必需参数
     """
     results = {"items": [{"item_id": "Foo"}, {"item_id": "Bar"}]}
     if q:
