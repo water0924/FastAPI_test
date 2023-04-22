@@ -1,8 +1,8 @@
-from typing import Union
+from typing import Union,List
 
 from enum import Enum
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Path, Body
 
 from pydantic import BaseModel
 
@@ -127,4 +127,72 @@ def set_requierd_paramter(q: str = Query(default = ..., min_length = 3)):
     if q:
         results.update({"q": q})
     return results
-# test
+
+@app.get("/define/group/value")
+def define_group_value(q: Union[List[str], None] = Query(default=None)):
+    """
+    以一个Python list 的形式接收到查询参数q的多个值，如["foo","bar"]
+    """
+    result = {"q": q}
+    return result
+
+@app.get("/alias/param")
+def alias_param(q: Union[List[str], None] = Query(default=None, alias="item-query")):
+    """
+    用alias参数声明一个别名，该别名用于在URL中查找查询参数值
+    """
+    results = {"items":[{"item_id": "foo"}, {"item_id": "Bar"}]}
+    if q:
+        results.update({"q", q})
+    return results
+
+@app.get("/Path/{item_id}")
+def read_items(
+    item_id: int = Path(title="The ID of the item to get"),
+    q: Union[str, None] = Query(default=None, alias="item-query"),
+):
+    """
+    使用Path为路径参数声明相同类型的校验和元数据
+    """
+    results = {"item_id": item_id}
+    if q:
+        results.update({"q": q})
+    return results
+
+# 请求体-多个参数
+#dff
+class User(BaseModel):
+    username: str
+    full_name: Union[str, None] = None
+
+@app.put("/most/param/{item_id}")
+def most_param(item_id: int,  item: Item, user: User, important: str):
+    """
+    该函数中有多个请求体参数
+    """
+    results = {"item_id": item_id ,"item":item, "user":user, "important": important}
+    return results
+
+@app.put("/body/{item_id}")
+def body(item_id: int, item: Item = Body(embed=True)):
+    """
+    只有一个请求体参数，默认情况下请求体不含键传入，如果需要含有键，可使用一个特殊的Body参数embed
+    以下没有body默认情况下为：
+    {
+    "name": "Foo",
+    "description": "The pretender",
+    "price": 42.0,
+    "tax": 3.2
+    }
+    有body情况下为：
+    {
+    "item": {
+        "name": "Foo",
+        "description": "The pretender",
+        "price": 42.0,
+        "tax": 3.2
+    }
+    }   
+    """
+    results = {"item_id": item_id, "item": item}
+    return results
