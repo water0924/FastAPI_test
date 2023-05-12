@@ -1,15 +1,20 @@
-from typing import Union,List
+import uvicorn
+
+from typing import Union,List, Any
 
 from enum import Enum
 
-from fastapi import FastAPI, Query, Path, Body
+from fastapi import FastAPI, Query, Path, Body, Cookie, Header,status, HTTPException
 
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 app = FastAPI()
 
 # 终端运行命令
 # uvicorn main:app --reload
+def more():
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+    print("运行")
 
 class Item(BaseModel):
     name: str
@@ -196,3 +201,33 @@ def body(item_id: int, item: Item = Body(embed=True)):
     """
     results = {"item_id": item_id, "item": item}
     return results
+
+@app.put("/set/cookie/")
+def set_cookie(ads_id: Union[str, None] = Cookie(default=None)):
+    """
+    定义 Cookie 参数
+    你需要使用 Cookie 来声明 cookie 参数，否则参数将会被解释为查询参数
+    """
+    return {"ads_id": ads_id}
+
+@app.get("/set/header/")
+def set_header(user_agent: Union[str, None] = Header(default=None)):
+    """
+    默认情况下, Header 将把参数名称的字符从下划线 (_) 转换为连字符 (-) 来提取并记录 headers
+    如果出于某些原因，你需要禁用下划线到连字符的自动转换，设置Header的参数 convert_underscores 为 False
+    """
+    return {"User-Agent": user_agent} 
+
+@app.get("/deal/expection/")
+def deal_expection(item_id: str):
+    """
+    客户端用 ID 请求的 param 不存在时，触发状态码为 404 的异常
+    """
+    param ={"foo": "The Foo Wreastlers"}
+    if item_id not in param:
+        raise HTTPException(status_code=404, detail = "Item not found")
+    return {"item": param[item_id]}
+
+
+# if __name__ == "__main__":
+#     uvicorn.run(app, host="0.0.0.0", port=8000)
